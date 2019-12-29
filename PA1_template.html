@@ -430,7 +430,12 @@ library(lubridate)</code></pre>
 ##     date</code></pre>
 <div id="step-1---code-to-read-and-process-data" class="section level3">
 <h3>Step 1 - Code to read and process data</h3>
-<pre class="r"><code>activityData &lt;- read.csv(&quot;./repdata_data_activity/activity.csv&quot;)
+<pre class="r"><code>temp &lt;- tempfile()
+download.file(&quot;https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip&quot;, temp, mode=&quot;wb&quot;)
+unzip(temp, &quot;activity.csv&quot;,exdir = &quot;data&quot;)
+activityData &lt;- read.csv(&quot;./data/activity.csv&quot;)
+unlink(temp)
+
 activityData$date &lt;- as.POSIXct(activityData$date, &quot;%Y-%m-%d&quot;)
 weekday &lt;- weekdays(activityData$date)
 activityData &lt;- cbind(activityData,weekday)

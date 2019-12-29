@@ -31,10 +31,17 @@ output: html_document
 knitr::opts_chunk$set(warning=FALSE)
 library(ggplot2)
 library(lubridate)
+
 ```
 ### Step 1 - Code to read and process data
 ```{r, echo = TRUE }
-activityData <- read.csv("./repdata_data_activity/activity.csv")
+#Following steps to download data and extract
+temp <- tempfile()
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", temp, mode="wb")
+unzip(temp, "activity.csv",exdir = "data")
+activityData <- read.csv("./data/activity.csv")
+unlink(temp)
+
 activityData$date <- as.POSIXct(activityData$date, "%Y-%m-%d")
 weekday <- weekdays(activityData$date)
 activityData <- cbind(activityData,weekday)
