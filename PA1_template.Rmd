@@ -1,0 +1,118 @@
+---
+title: "ReproducibleReaerchProject1"
+author: "rmydeen"
+date: "12/29/2019"
+output: html_document
+---
+## Assignment Steps  
+### Read & process data ( Step 1)
+ 1. Read CSV file
+ 2. Process & transform CSV data (Step 1)
+ 
+### Calculate Total number of steps (Steps 2 & 3)
+ 3. Calculate total number of steps per day
+ 4. Make a histrogram of total number of steps per day (        Step 2)
+ 5. Calculate & report the mean & median of the total number      of steps taken per day (Step 3)
+ 
+### Average Daily Activity Pattern (Steps 4 & 5)
+ 6. Calculate average daily activity pattern
+ 7. Make a time series plot of the 5-minute interval (x-axis)     and the average number of steps taken, averaged across all     days (y-axis) (Step 4)
+ 8. Find which 5-minute interval, on average across all the     days in the dataset, contains the maximum number of steps.(Step 5)
+ 
+### Impute Missing Values ( Steps 6 & 7 & 8)
+ 9. Calculate and report the total number of missing values     in the dataset.
+10. Devise a strategy for filling in all of the missing         values in the dataset.( Step 6)
+11. Make a histogram of the total number of steps taken each     day and Calculate and report the mean and median total      number of steps taken per day.( Step 7)
+12. Make a panel plot containing a time series plot of the      5-minute interval (x-axis) and the average number of        steps taken, averaged across all weekday days or weekend     days (y-axis). (Step 8)
+
+## R Code Part
+```{r, echo =TRUE}
+#Ingore warnings for Knitr
+knitr::opts_chunk$set(warning=FALSE)
+library(ggplot2)
+library(lubridate)
+```
+### Step 1 - Code to read and process data
+```{r, echo = TRUE }
+activityData <- read.csv("./repdata_data_activity/activity.csv")
+activityData$date <- as.POSIXct(activityData$date, "%Y-%m-%d")
+weekday <- weekdays(activityData$date)
+activityData <- cbind(activityData,weekday)
+# Dim
+dim(activityData)
+# Summary of all activity data
+summary(activityData)
+#head
+head(activityData)
+# Names
+names(activityData)
+```
+
+### Step 2 - total number of steps per day
+```{r, echo =TRUE}
+totalStepsPerDay <- with(activityData, aggregate(steps, by = list(date), FUN = sum, na.rm = TRUE))
+names(totalStepsPerDay) <- c("date", "steps")
+
+hist(totalStepsPerDay$steps, xlab="Total Number of Steps per day", ylab="Number of Days", main="Total Number of Steps per day",col="darkOrange",ylim = c(0,20), breaks = seq(0,25000, by=2500))
+```
+
+### Step 3 - Mean & Median
+```{r, echo =TRUE}
+#Mean of total steps taken per day
+mean(totalStepsPerDay$steps)
+# Median of total steps taken per day
+median(totalStepsPerDay$steps)
+```
+
+### Step 4 - Daily pattern
+```{r,echo=TRUE}
+stepsPerInterval<-aggregate(steps~interval, data=activityData, mean, na.rm=TRUE)
+with(stepsPerInterval,plot(interval,steps, type="l"))
+```
+
+### Step 5 - Maximum number of Steps
+```{r,echo=TRUE}
+stepsPerInterval[which.max(stepsPerInterval[,2]),1]
+```
+
+### Step 6 - With Imputing missing values
+```{r,echo=TRUE}
+valuesMissing <- is.na(activityData[,1])
+m<-mean(stepsPerInterval$steps)
+# Impute with mean valu
+
+activityDataImp<-activityData
+activityDataImp[valuesMissing,1]<-m
+head(activityDataImp)
+totalStepsPerDayImp <- with(activityDataImp, aggregate(steps, by = list(date), FUN = sum, na.rm = TRUE))
+names(totalStepsPerDayImp) <- c("date", "steps")
+```
+### Step 7 - histogram after imputed values
+```{r,echo=TRUE}
+hist(totalStepsPerDayImp$steps, xlab="Total Number of Steps per day", ylab="Number of Days", main="Total Number of Steps per day (Imputed)",col="darkGreen",ylim = c(0,35), breaks = seq(0,25000, by=2500))
+
+#Mean of total steps taken per day
+mean(totalStepsPerDayImp$steps)
+# Median of total steps taken per day
+median(totalStepsPerDayImp$steps)
+
+```
+
+### Step 8 Weekend vs Weekdays
+```{r,echo=TRUE}
+activityData$date <- as.Date(strptime(activityData$date, format="%Y-%m-%d"))
+activityData$datetype <- sapply(activityData$date, function(x) {
+        if (weekdays(x) == "Satureday" | weekdays(x) =="Sunday") 
+                {y <- "Weekend"} else 
+                {y <- "Weekday"}
+                y
+        })
+activity_data_date <- aggregate(steps~interval + datetype, activityData, mean, na.rm = TRUE)
+gplot<- ggplot(activity_data_date, aes(x = interval , y = steps, color = datetype)) +
+       geom_line() +
+       labs(title = "Average daily steps by date", x = "Interval", y = "Average number of steps") +
+       facet_wrap(~datetype, ncol = 1, nrow=2)
+print(gplot)
+```
+
+
